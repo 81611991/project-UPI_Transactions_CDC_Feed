@@ -40,7 +40,7 @@ This project implements a **Change Data Capture (CDC) pipeline** for UPI transac
    - **Batch 2:** Transactions are updated (e.g., status change from `initiated` to `completed`).
    - **Batch 3:** Refund transactions are processed.
 
-   ```python
+```python
 from delta.tables import DeltaTable
 import time
 
