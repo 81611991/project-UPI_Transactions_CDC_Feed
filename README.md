@@ -57,6 +57,52 @@ This project implements a **Change Data Capture (CDC) pipeline** for UPI transac
            .execute()
    ```
 
+#### **Real-time Merchant Aggregation (`realtime_merchant_aggregation.ipynb`)**
+1. **Create an Aggregated Transactions Table**:
+   ```sql
+   CREATE TABLE IF NOT EXISTS incremental_load.default.aggregated_upi_transactions (
+       merchant_id STRING,
+       total_sales DOUBLE,
+       total_refunds DOUBLE,
+       net_sales DOUBLE
+   ) USING DELTA;
+   ```
+2. **Stream Changes from CDC Feed**:
+   - Read changes using **Change Data Feed (CDF)** from `raw_upi_transactions_v1`.
+   - Only process **inserts and updates** (`_change_type` = `insert`, `update_postimage`).
+
+3. **Process and Aggregate Data in Micro-batches**:
+   ```python
+   def process_aggregation(batch_df, batch_id):
+       aggregated_df = (
+           batch_df 
+           .filter(col("_change_type").isin("insert", "update_postimage"))
+           .groupBy("merchant_id")
+           .agg(
+               sum(when(col("transaction_status") == "completed", col("transaction_amount")).otherwise(0)).alias("total_sales"),
+               sum(when(col("transaction_status") == "refunded", col("transaction_amount")).otherwise(0)).alias("total_refunds")
+           )
+           .withColumn("net_sales", col("total_sales") - col("total_refunds"))
+       )
+       
+       target_table = DeltaTable.forName(spark, "incremental_load.default.aggregated_upi_transactions")
+       target_table.alias("target")\
+           .merge(aggregated_df.alias("source"), "target.merchant_id = source.merchant_id")\
+           .whenMatchedUpdate(set={
+               "total_sales": "target.total_sales + source.total_sales",
+               "total_refunds": "target.total_refunds + source.total_refunds",
+               "net_sales": "target.net_sales + source.net_sales"
+           })\
+           .whenNotMatchedInsertAll()\
+           .execute()
+   ```
+
+4. **Start Streaming Aggregation**:
+   ```python
+   cdc_stream = spark.readStream.format("delta").option("readChangeFeed", "true").table("raw_upi_transactions_v1")
+   cdc_stream.writeStream.foreachBatch(process_aggregation).outputMode("update").start().awaitTermination()
+   ```
+
 ---
 
 ## **How to Run the Project**
