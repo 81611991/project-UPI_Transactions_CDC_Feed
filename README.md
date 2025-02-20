@@ -83,6 +83,8 @@ mock_batches = [
            })\
            .whenNotMatchedInsertAll()\
            .execute()
+   merge_to_delta_table("incremental_load.default.raw_upi_transactions_v1", mock_batches[0])
+   print(f"Batch processed successfully.")
    ```
 
 #### **Real-time Merchant Aggregation (`realtime_merchant_aggregation.ipynb`)**
