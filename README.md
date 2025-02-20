@@ -87,6 +87,31 @@ mock_batches = [
    print(f"Batch processed successfully.")
    ```
 
+3. **check output from cdc enabled delta table**:
+   ```python
+   # Read CDC stream
+   cdc_stream = spark.readStream.format("delta") \
+       .option("readChangeFeed", "true") \
+       .table("incremental_load.default.raw_upi_transactions")
+   
+   # Display CDC changes
+   query = cdc_stream.select(
+       "transaction_id",
+       "upi_id",
+       "merchant_id",
+       "transaction_amount",
+       "transaction_timestamp",
+       "transaction_status",
+       "_change_type",  # CDC change type
+       "_commit_version",
+       "_commit_timestamp"
+   ).writeStream.format("console") \
+       .outputMode("append") \
+       .start()
+   
+   query.awaitTermination()
+   ```
+
 #### **Real-time Merchant Aggregation (`realtime_merchant_aggregation.ipynb`)**
 1. **Create an Aggregated Transactions Table**:
    ```sql
