@@ -8,10 +8,6 @@ This project implements a **Change Data Capture (CDC) pipeline** for UPI transac
 - **Spark Structured Streaming**
 - **Delta Lake**
 
-## Architecture Diagram
-![Architecture Diagram](path/to/architecture-diagram.png)
-
----
 
 ## Implementation Details
 
@@ -34,6 +30,7 @@ This project implements a **Change Data Capture (CDC) pipeline** for UPI transac
    ) USING DELTA
    TBLPROPERTIES ('delta.enableChangeDataFeed' = true);
    ```
+![Alt text](snaps/create-raw_tui_transaction_v1-table.PNG)
 
 2. **Insert and Update Transactions in Batches**:
    - **Batch 1:** New transactions are inserted.
@@ -67,6 +64,7 @@ mock_batches = [
     ], ["transaction_id", "upi_id", "merchant_id", "transaction_amount", "transaction_timestamp", "transaction_status"]),
 ]
 ```
+
 
 3. **Merge New Data into the Delta Table**:
    ```python
@@ -111,6 +109,8 @@ mock_batches = [
    
    query.awaitTermination()
    ```
+![Alt text](snaps/cdc-table-batch-1-output.PNG)
+![Alt text](snaps/cdc-table-batch-2-output.PNG)
 
 #### **Real-time Merchant Aggregation (`realtime_merchant_aggregation.ipynb`)**
 1. **Create an Aggregated Transactions Table**:
@@ -157,7 +157,8 @@ mock_batches = [
    cdc_stream = spark.readStream.format("delta").option("readChangeFeed", "true").table("raw_upi_transactions_v1")
    cdc_stream.writeStream.foreachBatch(process_aggregation).outputMode("update").start().awaitTermination()
    ```
-
+![Alt text](snaps/aggregation-after-batch-1.PNG)
+![Alt text](snaps/aggregation-after-batch-2.PNG)
 ---
 
 ## **How to Run the Project**
@@ -176,10 +177,6 @@ mock_batches = [
 │   ├── upi_merchant_pay_trx_mock_data.ipynb
 │   ├── realtime_merchant_aggregation.ipynb
 │
-├── data/                 # Sample datasets
-│
-├── docs/                 # Documentation & workflow files
-│   ├── project-explanation.txt
 │
 ├── README.md             # Main documentation
 ```
