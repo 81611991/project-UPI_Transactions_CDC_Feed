@@ -184,12 +184,10 @@ mock_batches = [
 ---
 
 ## **Future Enhancements**
-- Implement **real-time fraud detection** by tracking suspicious transactions.
-- Improve **scalability** with partitioned tables.
 - Add **automated testing** using PyTest or Great Expectations.
 - Integrate with **Power BI for visualization**.
 
 ---
 
 ## **Contact**
-For queries or contributions, contact [Your Name] at [Your Email].
+For queries or contributions, contact Yogesh Chauhan
